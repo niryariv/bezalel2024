@@ -19,7 +19,7 @@
     <script>
         const data_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTKyv7ySSTg5TDA_pUJ0LsOeWczktsne0TKqNKIFc9_8ImXEvdCSu3WuJR778FVwrj_xulcsFJH_v5/pub?gid=820777118&single=true&output=csv";
         const map = L.map('map').setView([31.782, 35.223], 15);
-        const tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
+        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
