@@ -15,26 +15,51 @@
 <body>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <script>
+        const data_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTKyv7ySSTg5TDA_pUJ0LsOeWczktsne0TKqNKIFc9_8ImXEvdCSu3WuJR778FVwrj_xulcsFJH_v5/pub?gid=820777118&single=true&output=csv";
         const map = L.map('map').setView([31.782, 35.223], 15);
-        const tiles = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        const tiles = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        fetch(data_url)
+            .then(response => response.text())
+            .then(csvText => {
+                Papa.parse(csvText, {
+                    header: true,
+                    complete: function(results) {
+                        results.data.forEach(row => {
+                            const lat = parseFloat(row['lat']); // Assuming latitude is labeled 'latitude'
+                            const lng = parseFloat(row['lng']); // Assuming longitude is labeled 'longitude'
+                            const identifier = row['Identifier']; // Assuming identifier is labeled 'identifier'
 
-        fetch('data.geojson')
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    onEachFeature: function (feature, layer) {
-                        if (feature.properties && feature.properties.Identifier) {
-                            layer.bindPopup(feature.properties.Identifier);
-                        }
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                if (identifier) {
+                                    const circle = L.circle([lat, lng], {
+                                        color: row['Colors'].split('|')[0] || 'blue',
+                                        fillOpacity: 0.5,
+                                        radius: 30
+                                    }).addTo(map);
+                                    let popupContent = '<table>';
+                                    for (const [key, value] of Object.entries(row)) {
+                                        if (value) {
+                                            popupContent += `<tr><td><strong>${key}</strong></td><td>${value}</td></tr>`;
+                                        }
+                                    }
+                                    if (row['media']) {
+                                        popupContent += `<tr><td colspan="2"><img src="${row['media']}" style="max-width: 200px;"></td></tr>`;
+                                    }
+                                    popupContent += '</table>';
+                                    circle.bindPopup(popupContent);
+                                }
+                            }
+                        });
                     }
-                }).addTo(map);
+                });
             })
-            .catch(error => console.error('Error loading the GeoJSON data:', error));
+            .catch(error => console.error('Error loading the CSV data:', error));
     </script>
 </body>
 </html>
